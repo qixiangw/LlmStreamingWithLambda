@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  python response streaming
+
+Resources:
+  CustomImageLambda:
+    Type: AWS::Serverless::Function
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./src/
+    Properties:
+      PackageType: Image
+      Timeout: 900
+      MemorySize: 1024
+      Policies:
+        - AdministratorAccess
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
+      Policies:
+      - Statement:
+        - Sid: BedrockInvokePolicy
+          Effect: Allow
+          Action:
+          - bedrock:InvokeModelWithResponseStream
+          Resource: '*'
+      Tracing: Active
+
+  CustomImageUrlPublicAccess:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: CustomImageLambda
+      FunctionUrlAuthType: NONE
+      Action: lambda:InvokeFunctionUrl
+      Principal: "*"
